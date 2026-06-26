@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="color-scheme" content="dark" />
+<title>liquid.vercel.app</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<!-- ===== Global SVG gradient defs (used by every icon) ===== -->
+<svg width="0" height="0" aria-hidden="true" style="position:absolute">
+  <defs>
+    <linearGradient id="iconGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#7c3aed"/>
+      <stop offset="50%" stop-color="#e0218a"/>
+      <stop offset="100%" stop-color="#22d3ee"/>
+    </linearGradient>
+    <linearGradient id="iconGold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f5b942"/>
+      <stop offset="100%" stop-color="#ff8a3d"/>
+    </linearGradient>
+    <linearGradient id="iconWater" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2dd4bf"/>
+      <stop offset="100%" stop-color="#22d3ee"/>
+    </linearGradient>
+  </defs>
+</svg>
+
+<!-- ===== Animated Liquid Background ===== -->
+<div class="liquid-bg">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+  <div class="blob blob-4"></div>
+  <div class="blob blob-5"></div>
+  <canvas id="fluidCanvas"></canvas>
+  <div class="grain"></div>
+</div>
+
+<!-- ===== Toast container ===== -->
+<div id="toastWrap" class="toast-wrap"></div>
+
+<!-- ================= LOGIN SCREEN ================= -->
+<section id="loginScreen" class="screen active">
+  <div class="login-card glass float-in">
+    <div class="logo">
+      <div class="logo-orb"></div>
+      <h1 class="brand">LIQUID<span>VERCEL</span></h1>
+      <p class="tagline">roleplay casino &middot; for entertainment only &middot; no real money</p>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="key">License Key</button>
+      <button class="tab" data-tab="admin">Admin</button>
+    </div>
+
+    <!-- License key panel -->
+    <div class="tab-panel active" id="panel-key">
+      <label class="field-label">Enter your license key</label>
+      <input id="keyInput" class="input liquid-input" type="text" placeholder="XXXX-XXXX-XXXX" autocomplete="off" spellcheck="false" maxlength="40" />
+      <button id="keyLoginBtn" class="btn btn-primary liquid-hover">Enter Casino <span class="ic-slot" data-ic="arrow-right"></span></button>
+      <p class="hint">Don't have a key? Ask an admin to generate one.</p>
+    </div>
+
+    <!-- Admin panel -->
+    <div class="tab-panel" id="panel-admin">
+      <label class="field-label">Admin access key</label>
+      <input id="adminInput" class="input liquid-input" type="password" placeholder="&bull; &bull; &bull; &bull; &bull;" autocomplete="off" maxlength="64" />
+      <button id="adminLoginBtn" class="btn btn-gold liquid-hover">Open Admin Console <span class="ic-slot" data-ic="arrow-right"></span></button>
+      <p class="hint">Authorized personnel only.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ADMIN SCREEN ================= -->
+<section id="adminScreen" class="screen">
+  <header class="topbar glass">
+    <div class="topbar-left">
+      <div class="logo-orb sm"></div>
+      <strong>ADMIN CONSOLE</strong>
+    </div>
+    <div class="topbar-right">
+      <button id="adminLogout" class="btn btn-ghost sm liquid-hover"><span class="ic-slot" data-ic="log-out"></span> Log out</button>
+    </div>
+  </header>
+
+  <div class="admin-wrap">
+    <!-- Key generator -->
+    <div class="glass admin-card">
+      <h2>Generate License Key</h2>
+      <div class="form-grid">
+        <div>
+          <label class="field-label">Starting balance ($)</label>
+          <input id="genBalance" class="input liquid-input" type="number" value="100" min="0" max="100000000" />
+        </div>
+        <div>
+          <label class="field-label">Label / owner (optional)</label>
+          <input id="genLabel" class="input liquid-input" type="text" placeholder="e.g. Player One" maxlength="40" />
+        </div>
+        <div>
+          <label class="field-label">Note (optional)</label>
+          <input id="genNote" class="input liquid-input" type="text" placeholder="VIP / test / event" maxlength="60" />
+        </div>
+      </div>
+      <button id="genKeyBtn" class="btn btn-gold liquid-hover"><span class="ic-slot" data-ic="plus"></span> Generate Key</button>
+    </div>
+
+    <!-- Admin command console -->
+    <div class="glass admin-card">
+      <h2>Command Console</h2>
+      <p class="hint" style="text-align:left">Type <code>help</code> for the full command list.</p>
+      <div id="consoleOut" class="console-out"></div>
+      <div class="console-input-row">
+        <span class="prompt">&rsaquo;</span>
+        <input id="consoleIn" class="console-in" type="text" placeholder="type a command&hellip;" autocomplete="off" />
+      </div>
+    </div>
+
+    <!-- Keys table -->
+    <div class="glass admin-card">
+      <div class="card-head">
+        <h2>License Keys</h2>
+        <div class="card-head-actions">
+          <span id="keyCount" class="pill">0 keys</span>
+          <button id="exportKeys" class="btn btn-ghost sm liquid-hover"><span class="ic-slot" data-ic="download"></span> Export</button>
+          <button id="wipeKeys" class="btn btn-danger sm liquid-hover"><span class="ic-slot" data-ic="trash"></span> Wipe All</button>
+        </div>
+      </div>
+      <div class="table-wrapper">
+        <table class="keys-table">
+          <thead>
+            <tr>
+              <th>Key</th><th>Label</th><th>Balance</th><th>Status</th><th>Created</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="keysBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CASINO SCREEN ================= -->
+<section id="casinoScreen" class="screen">
+  <header class="topbar glass">
+    <div class="topbar-left">
+      <div class="logo-orb sm"></div>
+      <strong class="brand-sm">LIQUID<span>VERCEL</span></strong>
+    </div>
+    <div class="topbar-right">
+      <div class="balance-chip" id="balanceChip">
+        <span class="bal-label">BALANCE</span>
+        <span class="bal-val" id="balanceVal">$0.00</span>
+      </div>
+      <span id="playerTag" class="pill"></span>
+      <button id="soundToggle" class="btn btn-ghost sm icon-btn liquid-hover" title="Toggle sound"><span class="ic-slot" data-ic="volume"></span></button>
+      <button id="casinoLogout" class="btn btn-ghost sm liquid-hover"><span class="ic-slot" data-ic="log-out"></span> Exit</button>
+    </div>
+  </header>
+
+  <!-- Game grid / hub -->
+  <div id="gameHub" class="hub">
+    <div class="hub-head">
+      <h2>Choose a game</h2>
+      <p class="hint" style="text-align:left">All games are simulated. Have fun &mdash; it's not real money.</p>
+    </div>
+
+    <!-- Player stats strip -->
+    <div class="stats-strip glass" id="statsStrip"></div>
+
+    <div class="game-cards">
+      <button class="game-card glass liquid-hover" data-game="mines"><div class="gc-icon" data-ic="bomb"></div><span>Mines</span></button>
+      <button class="game-card glass liquid-hover" data-game="dice"><div class="gc-icon" data-ic="dice"></div><span>Dice</span></button>
+      <button class="game-card glass liquid-hover" data-game="plinko"><div class="gc-icon" data-ic="plinko"></div><span>Plinko</span></button>
+      <button class="game-card glass liquid-hover" data-game="crash"><div class="gc-icon" data-ic="rocket"></div><span>Crash</span></button>
+      <button class="game-card glass liquid-hover" data-game="coinflip"><div class="gc-icon" data-ic="coin"></div><span>Coin Flip</span></button>
+      <button class="game-card glass liquid-hover" data-game="limbo"><div class="gc-icon" data-ic="limbo"></div><span>Limbo</span></button>
+      <button class="game-card glass liquid-hover" data-game="wheel"><div class="gc-icon" data-ic="wheel"></div><span>Wheel</span></button>
+      <button class="game-card glass liquid-hover" data-game="roulette"><div class="gc-icon" data-ic="target"></div><span>Roulette</span></button>
+    </div>
+
+    <!-- Leaderboard -->
+    <div class="glass leaderboard" id="leaderboard"></div>
+  </div>
+
+  <!-- Active game container -->
+  <div id="gameStage" class="game-stage">
+    <button id="backToHub" class="btn btn-ghost sm back-btn liquid-hover"><span class="ic-slot" data-ic="arrow-left"></span> Back to games</button>
+    <div id="gameMount"></div>
+  </div>
+</section>
+
+<!-- ================= ANNOUNCEMENT / INTRO MODAL ================= -->
+<div id="introModal" class="modal-overlay">
+  <div class="modal glass pop-in">
+    <div class="confetti-strip"></div>
+    <div class="modal-orb"></div>
+    <h2 class="modal-title">Welcome to <span class="brand-sm">LIQUID<span>VERCEL</span></span></h2>
+    <p class="modal-body">
+      You've been credited with a starting balance of
+      <strong class="big-money" id="introBalance">$100.00</strong>
+      to play with. Spin, flip, dive and crash your way to the top of the leaderboard.
+    </p>
+    <ul class="intro-list">
+      <li><span class="li-ic" data-ic="gamepad"></span> 8 fully playable games</li>
+      <li><span class="li-ic" data-ic="wallet"></span> No deposits, no withdrawals &mdash; pure roleplay</li>
+      <li><span class="li-ic" data-ic="trophy"></span> Beat your personal high score</li>
+    </ul>
+    <button id="introClose" class="btn btn-primary liquid-hover">Let's gamble <span class="ic-slot" data-ic="arrow-right"></span></button>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
